@@ -18,7 +18,7 @@ import json
 # ============================================================================
 
 # Your Render URL (update this after deployment)
-PRODUCTION_URL = "https://your-app-name.onrender.com/api/voice-detection"
+PRODUCTION_URL = "https://voice-detection-api-992e.onrender.com/api/voice-detection"
 
 # API Key
 API_KEY = "123456"
@@ -112,7 +112,7 @@ def test_voice_detection(audio_file, language="English"):
             print("✅ SUCCESS - ANALYSIS RESULTS")
             print("="*70)
             print(f"\n🔍 Classification: {result['classification']}")
-            print(f"📊 Confidence: {result['confidenceScore']:.2%}")
+            print(f"📊 Confidence: {result['confidenceScore']:.2f}")
             print(f"🌐 Language: {result['language']}")
             print(f"\n💬 Explanation:")
             print(f"   {result['explanation']}")
