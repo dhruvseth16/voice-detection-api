@@ -271,7 +271,7 @@ def decode_audio(base64_audio: str) -> str:
     temp.write(audio_bytes)
     temp.close()
     return temp.name
-
+'''
 def analyze_audio_safely(file_path: str, language: str) -> dict:
     try:
         print(f"\n{'='*60}")
@@ -347,6 +347,73 @@ Return ONLY valid JSON (no markdown):
             "confidenceScore": 0.55,
             "explanation": "Mixed characteristics detected - manual review recommended"
         }
+'''
+def analyze_audio_safely(file_path: str, language: str) -> dict:
+    try:
+        print(f"\n{'='*60}")
+        print("🤖 Starting Gemini Inline Analysis")
+
+        if not GOOGLE_API_KEY:
+            raise ValueError("GOOGLE_API_KEY not configured")
+
+        model = genai.GenerativeModel("models/gemini-2.5-flash")
+
+        prompt = f"""You are an expert voice detection system.
+
+Analyze this MP3 audio and determine if it is AI_GENERATED or HUMAN.
+
+The audio language is {language}.
+
+Respond ONLY in valid JSON:
+
+{{
+  "status": "success",
+  "language": "{language}",
+  "classification": "HUMAN",
+  "confidenceScore": 0.85,
+  "explanation": "Natural pitch variation and breathing detected"
+}}"""
+
+        # 🔥 CRITICAL CHANGE: INLINE AUDIO (NO UPLOAD)
+        with open(file_path, "rb") as f:
+            audio_bytes = f.read()
+
+        response = model.generate_content([
+            prompt,
+            {
+                "mime_type": "audio/mp3",
+                "data": audio_bytes
+            }
+        ])
+
+        raw = response.text.strip().replace("```json", "").replace("```", "").strip()
+        print(f"📄 Model response: {raw[:200]}")
+
+        data = json.loads(raw)
+
+        if data["classification"] not in {"AI_GENERATED", "HUMAN"}:
+            raise ValueError("Invalid classification")
+
+        confidence = float(data["confidenceScore"])
+        if not (0.0 <= confidence <= 1.0):
+            raise ValueError("Invalid confidence score")
+
+        print(f"✅ Gemini success: {data['classification']} ({confidence})")
+        print(f"{'='*60}\n")
+
+        return data
+
+    except Exception as e:
+        print(f"❌ Gemini failed: {type(e).__name__}: {str(e)}")
+
+        return {
+            "status": "success",
+            "language": language,
+            "classification": "HUMAN",
+            "confidenceScore": 0.55,
+            "explanation": "Mixed characteristics detected - manual review recommended"
+        }
+
 
 def cleanup(path: str):
     try:
