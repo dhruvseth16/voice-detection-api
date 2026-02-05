@@ -188,6 +188,14 @@ Framework: FastAPI
 AI Model: Google Gemini 1.5 Flash
 """
 
+"""
+Voice Detection API - Phase 3 (Production - Render Deployment)
+================================================================
+Author: Hackathon Team
+Framework: FastAPI
+AI Model: Google Gemini 1.5 Flash
+"""
+
 import base64
 import json
 import os
@@ -277,8 +285,8 @@ def analyze_audio_safely(file_path: str, language: str) -> dict:
         
         print(f"✅ API key configured")
         
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        print(f"✅ Model initialized")
+        model = genai.GenerativeModel("gemini-1.5-flash-latest")
+        print(f"✅ Model initialized: gemini-1.5-flash-latest")
         
         prompt = f"""You are an expert voice detection system.
 
