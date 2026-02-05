@@ -166,19 +166,17 @@ Respond ONLY in valid JSON:
         print(f"{'='*60}\n")
 
         return data
-
+    
     except Exception as e:
         print(f"❌ Gemini failed: {type(e).__name__}: {str(e)}")
 
-        return {
-            "status": "success",
-            "language": language,
-            "classification": "HUMAN",
-            "confidenceScore": 0.55,
-            "explanation": "Mixed characteristics detected - manual review recommended"
-        }
+        # Do NOT fake a classification — return an error
+        raise HTTPException(
+            status_code=500,
+            detail="Audio analysis failed"
+        )
 
-
+            
 def cleanup(path: str):
     try:
         os.remove(path)
