@@ -181,9 +181,18 @@ Return ONLY JSON:
         if data["classification"] not in {"AI_GENERATED", "HUMAN"}:
             raise ValueError("Invalid classification")
 
-        confidence = float(data["confidenceScore"])
+        confidence = float(data.get('confidenceScore', 0.5))
+
+        # ensure valid range
         if not (0.0 <= confidence <= 1.0):
             raise ValueError("Invalid confidence score")
+
+        # ---- calibration (prevents unrealistic certainty) ----
+        confidence = max(0.55, min(confidence, 0.95))
+        confidence = round(confidence, 2)
+
+        data['confidenceScore'] = confidence
+
 
         print(f"✅ Gemini success: {data['classification']} ({confidence})")
         print(f"{'='*60}\n")
