@@ -122,33 +122,57 @@ def analyze_audio_safely(file_path: str, language: str) -> dict:
 
         model = genai.GenerativeModel("models/gemini-2.5-flash")
 
-        prompt = f"""You are an expert voice detection system.
+        prompt = f"""
+You are a forensic audio analyst trained to detect synthetic speech.
 
-Analyze this MP3 audio and determine if it is AI_GENERATED or HUMAN.
+Your task is NOT to guess. You must look for artifacts.
 
-The audio language is {language}.
+Carefully analyze the audio for these signals:
 
-Respond ONLY in valid JSON:
+AI_GENERATED indicators:
+- unnaturally consistent pitch contour
+- identical phoneme timing patterns
+- missing micro-pauses between words
+- absence of breathing noise
+- over-smooth waveform
+- robotic prosody uniformity
+- abrupt phoneme transitions
+- lack of environmental noise variation
+
+HUMAN indicators:
+- irregular pacing and hesitation
+- breath intake or mouth clicks
+- micro pitch drift between syllables
+- slight background noise fluctuation
+- emotional tone variation
+- imperfect timing
+
+Decision rules:
+- If strong AI indicators exist → AI_GENERATED
+- If natural imperfections dominate → HUMAN
+- If uncertain → choose the closer class but lower confidence
+
+Return ONLY JSON:
 
 {{
   "status": "success",
   "language": "{language}",
-  "classification": "HUMAN",
-  "confidenceScore": 0.85,
-  "explanation": "Natural pitch variation and breathing detected"
-}}"""
+  "classification": "AI_GENERATED or HUMAN",
+  "confidenceScore": 0.0-1.0,
+  "explanation": "mention specific audio evidence"
+}}
+"""
+
 
         # 🔥 CRITICAL CHANGE: INLINE AUDIO (NO UPLOAD)
         with open(file_path, "rb") as f:
             audio_bytes = f.read()
 
-        response = model.generate_content([
-            prompt,
-            {
-                "mime_type": "audio/mp3",
-                "data": audio_bytes
-            }
-        ])
+        response = model.generate_content(
+            [prompt, {"mime_type": "audio/mp3", "data": audio_bytes}],
+            generation_config={"temperature": 0.1}
+        )
+
 
         raw = response.text.strip().replace("```json", "").replace("```", "").strip()
         print(f"📄 Model response: {raw[:200]}")
