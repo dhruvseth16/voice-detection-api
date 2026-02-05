@@ -123,34 +123,32 @@ def analyze_audio_safely(file_path: str, language: str) -> dict:
         model = genai.GenerativeModel("models/gemini-2.5-flash")
 
         prompt = f"""
-You are a forensic audio analyst trained to detect synthetic speech.
+You are a forensic speech analyst.
 
-Your task is NOT to guess. You must look for artifacts.
+Do NOT assume clean audio is AI.
+Studio recordings and phone recordings can sound very clean.
 
-Carefully analyze the audio for these signals:
+You must compare HUMAN evidence vs AI evidence.
 
-AI_GENERATED indicators:
-- unnaturally consistent pitch contour
-- identical phoneme timing patterns
-- missing micro-pauses between words
-- absence of breathing noise
-- over-smooth waveform
-- robotic prosody uniformity
-- abrupt phoneme transitions
-- lack of environmental noise variation
+Step 1 — Look for HUMAN evidence:
+- breathing or mouth clicks
+- timing irregularities
+- emphasis variation
+- emotional tone shifts
+- inconsistent syllable durations
+- natural hesitation patterns
 
-HUMAN indicators:
-- irregular pacing and hesitation
-- breath intake or mouth clicks
-- micro pitch drift between syllables
-- slight background noise fluctuation
-- emotional tone variation
-- imperfect timing
+Step 2 — Look for AI evidence:
+- identical rhythm across sentences
+- perfectly repeated phoneme timing
+- mechanical intonation curves
+- unnatural syllable uniformity
+- overly smooth prosody across entire clip
 
-Decision rules:
-- If strong AI indicators exist → AI_GENERATED
-- If natural imperfections dominate → HUMAN
-- If uncertain → choose the closer class but lower confidence
+Decision rule:
+If HUMAN evidence is stronger → HUMAN
+If AI evidence is stronger → AI_GENERATED
+If nearly equal → HUMAN with lower confidence
 
 Return ONLY JSON:
 
@@ -159,9 +157,10 @@ Return ONLY JSON:
   "language": "{language}",
   "classification": "AI_GENERATED or HUMAN",
   "confidenceScore": 0.0-1.0,
-  "explanation": "mention specific audio evidence"
+  "explanation": "cite strongest evidence"
 }}
 """
+
 
 
         # 🔥 CRITICAL CHANGE: INLINE AUDIO (NO UPLOAD)
@@ -170,7 +169,7 @@ Return ONLY JSON:
 
         response = model.generate_content(
             [prompt, {"mime_type": "audio/mp3", "data": audio_bytes}],
-            generation_config={"temperature": 0.1}
+            generation_config={"temperature": 0.0}
         )
 
 
