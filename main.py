@@ -180,13 +180,6 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
 '''
-"""
-Voice Detection API - Phase 3 (Production - Render Deployment)
-================================================================
-Author: Hackathon Team
-Framework: FastAPI
-AI Model: Google Gemini 1.5 Flash
-"""
 
 """
 Voice Detection API - Phase 3 (Production - Render Deployment)
@@ -285,8 +278,10 @@ def analyze_audio_safely(file_path: str, language: str) -> dict:
         
         print(f"✅ API key configured")
         
-        model = genai.GenerativeModel("gemini-1.5-flash-latest")
-        print(f"✅ Model initialized: gemini-1.5-flash-latest")
+        # Use gemini-pro - it's the most stable model for audio analysis
+        # gemini-1.5-flash has naming inconsistencies across API versions
+        model = genai.GenerativeModel("gemini-pro")
+        print(f"✅ Model initialized: gemini-pro")
         
         prompt = f"""You are an expert voice detection system.
 
