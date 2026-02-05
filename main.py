@@ -57,15 +57,45 @@ class ErrorResponse(BaseModel):
     message: str
 
 # ============================================================================
-# EXCEPTION HANDLER
+# EXCEPTION HANDLER old
 # ============================================================================
-
+'''
 @app.exception_handler(Exception)
+
 async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
         status_code=500,
         content={"status": "error", "message": "Internal server error"}
+    )'''
+
+# ============================================================================
+# EXCEPTION HANDLERS new
+# ============================================================================
+
+from fastapi.exceptions import HTTPException as FastAPIHTTPException
+
+# Handle expected API errors (401, 422, etc.)
+@app.exception_handler(FastAPIHTTPException)
+async def http_exception_handler(request: Request, exc: FastAPIHTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "status": "error",
+            "message": str(exc.detail)
+        }
     )
+
+# Handle unexpected crashes (500)
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={
+            "status": "error",
+            "message": "Internal server error"
+        }
+    )
+
 
 # ============================================================================
 # HELPERS
@@ -173,13 +203,13 @@ async def detect_voice(
     x_api_key: Optional[str] = Header(None)
 ):
     if x_api_key != VALID_API_KEY:
-        raise HTTPException(status_code=401, detail="Invalid API key")
+        raise HTTPException(status_code=401, detail="Invalid API key or malformed request")
     
     if body.language not in SUPPORTED_LANGUAGES:
         raise HTTPException(status_code=422, detail="Unsupported language")
     
     if body.audioFormat.lower() != "mp3":
-        raise HTTPException(status_code=422, detail="Only MP3 supported")
+        raise HTTPException(status_code=422, detail="Invalid API key or malformed request")
     
     temp_path = decode_audio(body.audioBase64)
     
